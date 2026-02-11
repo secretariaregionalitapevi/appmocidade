@@ -518,7 +518,7 @@ function dashboardFlotTwo() {
 
     var dataset = [
         {
-            label: "Músicos e organistas",
+            label: "Moços e Moças",
             grow:{stepMode:"linear"},
             data: data2,
             color: "#1ab394",
@@ -531,7 +531,7 @@ function dashboardFlotTwo() {
 
         },
         {
-            label: "Encarregados",
+            label: "Geral",
             grow:{stepMode:"linear"},
             data: data1,
             yaxis: 2,

@@ -33,6 +33,7 @@ function config($translateProvider) {
             MUSICA: 'Música',
             INSTRUMENTOS: 'Instrumentos',
             MUSICALIZACAO: 'Musicalização',
+            MOCIDADE: 'Mocidade',
 
             // Define some custom text
             WELCOME: 'Welcome Amelia',
