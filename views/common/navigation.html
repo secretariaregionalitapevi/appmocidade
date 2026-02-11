@@ -4,29 +4,111 @@
             <li class="nav-header">
 
                 <div class="profile-element" uib-dropdown>
+                    <img alt="image" class="img-circle" src="img/ricardo_small.jpg"/>
                     <a uib-dropdown-toggle href>
                             <span class="clear">
                                 <span class="block m-t-xs">
-                                    <strong class="font-bold">{{main.userName}}</strong>
+                                    <strong class="font-bold">Ricardo C. Grangeiro</strong>
                              </span>
-                                <span class="text-muted text-xs block">Example menu<b class="caret"></b></span>
+                                <span class="text-muted text-xs block">Secretário da Música <b class="caret"></b></span>
                             </span>
                     </a>
-                    <ul uib-dropdown-menu="" class="animated fadeInRight m-t-xs">
-                        <li><a href="">Logout</a></li>
+                    <ul uib-dropdown-menu class="animated fadeInRight m-t-xs">
+                        <li><a ui-sref="app.profile">Profile</a></li>
+                        <li><a ui-sref="app.contacts">Contacts</a></li>
+                        <li><a ui-sref="mailbox.inbox">Mailbox</a></li>
+                        <li class="divider"></li>
+                        <li><a ui-sref="login">Sair</a></li>
                     </ul>
                 </div>
                 <div class="logo-element">
                     IN+
                 </div>
+            </li>
+            <li ng-class="{active: $state.includes('dashboards')}">
+                <a ui-sref="dashboards.dashboard_2"><i class="fa fa-th-large"></i> <span class="nav-label">{{ 'Dashboard' | translate }}</span> </a>                
+            </li>
 
+            <li ng-class="{active: $state.includes('charts')}">
+                <a href="#"><i class="fa fa-child"></i> <span class="nav-label">{{ 'MUSICALIZACAO' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level" ng-class="{in: $state.includes('charts')}">
+                    <li ui-sref-active="active"><a ui-sref="charts.flot_chart">Crianças</a></li>
+                    <li ui-sref-active="active"><a ui-sref="charts.rickshaw_chart">Polos</a></li>
+                    <li ui-sref-active="active"><a ui-sref="charts.chartjs_chart">Aulas</a></li>
+                    <li ui-sref-active="active"><a ui-sref="charts.chartjs_chart">Instrutores</a></li>
+                </ul>
+            </li>
+            <li ng-class="{active: $state.includes('darpe')}">
+                <a href="#"><i class="fa fa-medkit"></i> <span class="nav-label">{{ 'D.A.R.P.E' | translate }} </span><span class="label label-info pull-right">NOVO</span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('darpe')}">
+                    <li ui-sref-active="active"><a ui-sref="darpe.musicos">Músicos</a></li>
+                    <li ui-sref-active="active"><a ui-sref="darpe.clinicas">Clínicas</a></li>
+                    <li ui-sref-active="active"><a ui-sref="mailbox.email_compose">Ministério</a></li>
+                    <li ui-sref-active="active"><a ui-sref="mailbox.email_template">Atendimentos</a></li>
+                    <li ui-sref-active="active"><a ui-sref="mailbox.email_compose">Membros</a></li>
+                    <li ui-sref-active="active"><a ui-sref="mailbox.email_template">Batismos</a></li>
+                </ul>
+            </li>
+            <li ng-class="{active: $state.includes('forms')}">
+                <a href="#"><i class="fa fa-edit"></i> <span class="nav-label">{{ 'G.E.M' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('forms')}">
+                    <li ui-sref-active="active"><a ui-sref="forms.basic_form">Alunos</a></li>
+                    <li ui-sref-active="active"><a ui-sref="forms.advanced_plugins">Histórico de Aulas</a></li>
+                    <li ui-sref-active="active"><a ui-sref="forms.wizard.step_one">Planos de Aula</a></li>
+                    <li ui-sref-active="active"><a ui-sref="forms.file_upload">Turmas</a></li>                    
+                </ul>
             </li>
 
             <li ui-sref-active="active">
-                <a ui-sref="index.main"><i class="fa fa-laptop"></i> <span class="nav-label">Main page</span> </a>
+                <a ui-sref="manutencao"><i class="fa fa-cogs"></i> <span class="nav-label">{{ 'MANUTENCAO' | translate }}</span> </a>                
             </li>
+
+                  
+            <li ng-class="{active: $state.includes('admin')}">
+                <a href="#"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'ADMIN' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('admin')}">
+                    <li ui-sref-active="active"><a ui-sref="admin.search_results">Congregações</a></li>
+                    <li><a ui-sref="lockscreen">Membros</a></li>
+                    <li><a ui-sref="errorOne">Ministério</a></li>                    
+                </ul>
+            </li>
+            
             <li ui-sref-active="active">
-                <a ui-sref="index.minor"><i class="fa fa-desktop"></i> <span class="nav-label">Minor page</span></a>
+                <a ui-sref="grid_options"><i class="fa fa-music"></i> <span class="nav-label">{{ 'MUSICA' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('music')}">
+                    <li ui-sref-active="active"><a ui-sref="music.static_table">Ensaios Regionais</a></li>
+                    <li ui-sref-active="active"><a ui-sref="music.data_tables">Exames / Testes</a></li>
+                    <li ui-sref-active="active"><a ui-sref="music.foo_table">Músicos</a></li>
+                    <li ui-sref-active="active"><a ui-sref="music.nggrid">Organistas</a></li>
+                    <li ui-sref-active="active"><a ui-sref="music.nggrid">Candidatos</a></li>
+                </ul>
+            </li>
+            <li ng-class="{active: $state.includes('tables')}"> 
+                <a href="#"><i class="fa fa-file-pdf-o"></i> <span class="nav-label">{{ 'RELATORIOS' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('tables')}">
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Ensaios Regionais</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.data_tables">Exames / Testes</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.foo_table">Instrutores (as)</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.nggrid">Candidatos</a></li>
+                </ul>
+            </li>
+            <li ng-class="{active: $state.includes('tables')}"> 
+                <a href="#"><i class="fa fa-music"></i> <span class="nav-label">{{ 'INSTRUMENTOS' | translate }}</span><span class="fa arrow"></span></a>
+                <ul class="nav nav-second-level collapse" ng-class="{in: $state.includes('tables')}">
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Entrada</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Ordem de Serviços</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Ordem de Compra</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Inventário</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.static_table">Manutenção</a></li>
+                    <li ui-sref-active="active"><a ui-sref="tables.data_tables">Saída</a></li>                    
+                </ul>
+            </li>
+            
+            <li ui-sref-active="active">
+                <a ui-sref="downloads"><i class="fa fa-download"></i> <span class="nav-label">{{ 'DOWNLOADS' | translate }}</span><span class="label label-info pull-right">32</span></a>
+            </li>
+            <li class="landing_link">
+                <a ui-sref="landing"><i class="fa fa-sign-out"></i> <span class="nav-label">{{ 'LANDING' | translate }}</span></a>
             </li>
         </ul>
 
