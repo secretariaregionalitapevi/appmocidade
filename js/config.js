@@ -179,6 +179,22 @@ function config($stateProvider, $urlRouterProvider, $ocLazyLoadProvider, IdlePro
             data: { pageTitle: 'Layouts' },
         })
 
+        .state('mocidade', {
+            abstract: true,
+            url: "/mocidade",
+            templateUrl: "views/common/content.html",
+        })
+        .state('mocidade.auxiliares', {
+            url: "/mocidade_auxiliares",
+            templateUrl: "views/mocidade_auxiliares.html",
+            data: { pageTitle: 'Auxiliares de Jovens' },
+        })
+        .state('mocidade.visitas', {
+            url: "/mocidade_visitas",
+            templateUrl: "views/mocidade_visitas.html",
+            data: { pageTitle: 'Visitas Grupo de Jovens' },
+        })
+
     
         .state('charts', {
             abstract: true,
