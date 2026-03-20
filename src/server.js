@@ -565,6 +565,7 @@ async function handleRequest(req, res) {
           req.on("end", async () => {
             try {
               const profileData = JSON.parse(body);
+              console.log("Recebido /api/profile (POST):", profileData);
               if (!profileData.id) return sendJson(res, 400, { error: "ID do usuário obrigatório." });
 
               const urlUpsert = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/rjm_auxiliares`);
@@ -581,11 +582,14 @@ async function handleRequest(req, res) {
 
               if (!response.ok) {
                 const errorText = await response.text();
+                console.error("Erro no Supabase ao dar upsert:", errorText);
                 return sendJson(res, response.status, { error: "Erro ao salvar perfil no Supabase.", details: errorText });
               }
 
+              console.log("Perfil salvo com sucesso no Supabase!");
               return sendJson(res, 200, { success: true });
             } catch (err) {
+              console.error("Erro interno no processamento do perfil:", err);
               return sendJson(res, 500, { error: "Erro interno ao processar perfil." });
             }
           });

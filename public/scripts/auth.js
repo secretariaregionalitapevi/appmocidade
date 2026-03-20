@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // 2. Salvar perfil na tabela rjm_auxiliares via API do servidor (seguro contra RLS/permissão)
       try {
-        await fetch('/api/profile', {
+        const resProf = await fetch('/api/profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -117,6 +117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             cidade: 'Itapevi'
           })
         });
+        const resProfData = await resProf.json();
+        console.log('Resposta /api/profile:', resProfData);
       } catch (err) {
         console.error('Erro ao salvar perfil via API:', err);
       }
