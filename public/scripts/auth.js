@@ -1,0 +1,134 @@
+let supabaseClient;
+
+window.togglePassword = (id) => {
+  const input = document.getElementById(id);
+  const container = input.closest('.form-group');
+  const toggle = container.querySelector('.password-toggle');
+  
+  if (input.type === 'password') {
+    input.type = 'text';
+    // Mudar para olho fechado (eye-off)
+    toggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+  } else {
+    input.type = 'password';
+    // Mudar para olho aberto (eye)
+    toggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  }
+};
+
+async function initSupabase() {
+  try {
+    const res = await fetch('/api/config');
+    const config = await res.json();
+    // Atribui ao escopo global para outros scripts usarem se necessário
+    window.supabaseClient = supabase.createClient(config.url, config.anonKey);
+    supabaseClient = window.supabaseClient;
+  } catch (err) {
+    console.error('Falha ao inicializar Supabase:', err);
+  }
+}
+
+window.checkAuth = async () => {
+  if (!supabaseClient) await initSupabase();
+  
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const user = session?.user;
+
+  if (!user && window.location.pathname !== '/login.html') {
+    window.location.href = '/login.html';
+    return null;
+  }
+  
+  return user;
+};
+
+// Lógica para os formulários de login e registro
+document.addEventListener('DOMContentLoaded', async () => {
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+
+  // LOGIN
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      const feedback = document.getElementById('loginFeedback');
+      
+      if (feedback) feedback.textContent = 'Autenticando...';
+      if (!supabaseClient) await initSupabase();
+      
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        if (feedback) feedback.textContent = 'Erro: ' + error.message;
+      } else {
+        window.location.href = '/';
+      }
+    });
+  }
+
+  // REGISTRO
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fullName = e.target.fullName.value;
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      const confirmPassword = e.target.confirmPassword.value;
+      const comum = e.target.comum.value;
+      const feedback = document.getElementById('registerFeedback');
+
+      if (password !== confirmPassword) {
+        if (feedback) feedback.textContent = 'As senhas não coincidem.';
+        return;
+      }
+
+      if (feedback) feedback.textContent = 'Criando conta...';
+      if (!supabaseClient) await initSupabase();
+
+      // 1. Criar usuário no Auth
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            comum: comum
+          }
+        }
+      });
+
+      if (authError) {
+        if (feedback) feedback.textContent = 'Erro: ' + authError.message;
+        return;
+      }
+
+      // 2. Salvar perfil na tabela rjm_auxiliares
+      const { error: profileError } = await supabaseClient
+        .from('rjm_auxiliares')
+        .insert([{
+          id: authData.user.id,
+          full_name: fullName,
+          email: email,
+          comum: comum,
+          cidade: 'Itapevi' // Padrão para este regional
+        }]);
+
+      if (profileError) {
+        console.error('Erro ao salvar perfil:', profileError);
+        // Prosseguimos mesmo se falhar o rjm_auxiliares, pois o Auth já funcionou.
+        // O usuário precisará confirmar o e-mail se habilitado.
+      }
+
+      Swal.fire({
+        title: 'Conta Criada!',
+        text: 'Sua conta foi criada com sucesso. Verifique seu e-mail se necessário ou faça login.',
+        icon: 'success',
+        confirmButtonColor: '#003049'
+      }).then(() => {
+        window.location.href = '/login.html';
+      });
+    });
+  }
+});
