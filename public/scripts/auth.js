@@ -104,21 +104,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // 2. Salvar perfil na tabela rjm_auxiliares
-      const { error: profileError } = await supabaseClient
-        .from('rjm_auxiliares')
-        .insert([{
-          id: authData.user.id,
-          full_name: fullName,
-          email: email,
-          comum: comum,
-          cidade: 'Itapevi' // Padrão para este regional
-        }]);
-
-      if (profileError) {
-        console.error('Erro ao salvar perfil:', profileError);
-        // Prosseguimos mesmo se falhar o rjm_auxiliares, pois o Auth já funcionou.
-        // O usuário precisará confirmar o e-mail se habilitado.
+      // 2. Salvar perfil na tabela rjm_auxiliares via API do servidor (seguro contra RLS/permissão)
+      try {
+        await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: authData.user.id,
+            full_name: fullName,
+            email: email,
+            comum: comum,
+            cidade: 'Itapevi'
+          })
+        });
+      } catch (err) {
+        console.error('Erro ao salvar perfil via API:', err);
       }
 
       Swal.fire({

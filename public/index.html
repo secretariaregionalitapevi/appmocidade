@@ -13,7 +13,8 @@
 <body style="background: #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <main class="auth-wrap" style="padding: 0; display: flex; align-items: center; justify-content: center; width: 100%;">
 
-    <div class="sac-card" style="width: min(600px, 95%);">
+    <div class="sac-card" style="width: min(600px, 95%); position: relative;">
+      <button id="btnLogout" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; z-index: 10; text-transform: uppercase; transition: all 0.3s;">Voltar</button>
       <header class="sac-header">
         <img src="/assets/logo-ccb.png" alt="CCB" class="sac-logo" />
         <h1 class="sac-title">Lançamento de Recitativos</h1>
@@ -181,13 +182,20 @@
         window.location.href = '/cadastro';
       };
 
-      // Configurar botões
+      // Configurar botões de tipo
       const typeBtns = document.querySelectorAll('.grid-btns .sac-btn');
       typeBtns.forEach(btn => {
         btn.onclick = () => {
           handleNavigation(btn.dataset.type);
         };
       });
+
+      // Botão Voltar (Logout)
+      document.getElementById('btnLogout').onclick = async () => {
+        if (!window.supabaseClient) await window.initSupabase();
+        await window.supabaseClient.auth.signOut();
+        window.location.href = '/login.html';
+      };
 
     });
   </script>

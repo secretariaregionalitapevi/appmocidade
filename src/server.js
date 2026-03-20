@@ -537,24 +537,59 @@ async function handleRequest(req, res) {
       }
 
       if (pathname === "/api/profile") {
-        const userId = url.searchParams.get("id");
-        if (!userId) return sendJson(res, 400, { error: "ID do usuário ausente." });
-
         const supabaseUrl = process.env.SUPABASE_URL;
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        
-        const urlProfile = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/rjm_auxiliares?id=eq.${userId}&select=full_name,comum,cidade`);
-        try {
-          const response = await fetch(urlProfile, {
-            headers: {
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`
+
+        if (req.method === "GET") {
+          const userId = url.searchParams.get("id");
+          if (!userId) return sendJson(res, 400, { error: "ID do usuário ausente." });
+          
+          const urlProfile = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/rjm_auxiliares?id=eq.${userId}&select=full_name,comum,cidade`);
+          try {
+            const response = await fetch(urlProfile, {
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`
+              }
+            });
+            const data = await response.json();
+            return sendJson(res, 200, data[0] || {});
+          } catch (err) {
+            return sendJson(res, 500, { error: "Erro ao buscar perfil." });
+          }
+        }
+
+        if (req.method === "POST") {
+          let body = "";
+          req.on("data", chunk => body += chunk);
+          req.on("end", async () => {
+            try {
+              const profileData = JSON.parse(body);
+              if (!profileData.id) return sendJson(res, 400, { error: "ID do usuário obrigatório." });
+
+              const urlUpsert = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/rjm_auxiliares`);
+              const response = await fetch(urlUpsert, {
+                method: "POST",
+                headers: {
+                  apikey: supabaseKey,
+                  Authorization: `Bearer ${supabaseKey}`,
+                  "Content-Type": "application/json",
+                  "Prefer": "resolution=merge-duplicates"
+                },
+                body: JSON.stringify(profileData)
+              });
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                return sendJson(res, response.status, { error: "Erro ao salvar perfil no Supabase.", details: errorText });
+              }
+
+              return sendJson(res, 200, { success: true });
+            } catch (err) {
+              return sendJson(res, 500, { error: "Erro interno ao processar perfil." });
             }
           });
-          const data = await response.json();
-          return sendJson(res, 200, data[0] || {});
-        } catch (err) {
-          return sendJson(res, 500, { error: "Erro ao buscar perfil." });
+          return;
         }
       }
 
