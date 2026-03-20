@@ -21,7 +21,12 @@ async function initSupabase() {
     const res = await fetch('/api/config');
     const config = await res.json();
     // Atribui ao escopo global para outros scripts usarem se necessário
-    window.supabaseClient = supabase.createClient(config.url, config.anonKey);
+    window.supabaseClient = supabase.createClient(config.url, config.anonKey, {
+      auth: {
+        persistSession: true,
+        storage: window.sessionStorage // Sessão morre quando fecha a aba/navegador
+      }
+    });
     supabaseClient = window.supabaseClient;
   } catch (err) {
     console.error('Falha ao inicializar Supabase:', err);

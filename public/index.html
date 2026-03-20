@@ -120,10 +120,11 @@
         // Se o usuário tem uma comum no perfil, pré-selecionar
         if (window.currentUser?.user_metadata?.comum) {
           const userComum = window.currentUser.user_metadata.comum;
-          const userCity = window.currentUser.user_metadata.cidade || '';
+          const userCity = window.currentUser.user_metadata.cidade || 'Itapevi'; // Default para Itapevi se faltar
           comumInput.value = userComum;
           comumSearch.value = userComum;
           document.getElementById('municipio').value = userCity;
+          console.log('Pré-seleção aplicada:', { userComum, userCity });
         }
       } catch (err) {
         console.error('Erro ao carregar comuns:', err);
@@ -144,8 +145,14 @@
       // Função de processamento e navegação
       const handleNavigation = (type) => {
         const mes = document.getElementById('mes').value;
-        const municipio = document.getElementById('municipio').value;
         const comum = document.getElementById('comum').value;
+        let municipio = document.getElementById('municipio').value;
+
+        // Se o município estiver vazio mas a comum preenchida, tenta colocar Itapevi por padrão
+        if (comum && !municipio) {
+          municipio = 'Itapevi';
+          document.getElementById('municipio').value = 'Itapevi';
+        }
 
         console.log('Validando navegação:', { mes, municipio, comum });
 
