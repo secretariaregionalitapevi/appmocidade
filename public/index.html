@@ -143,31 +143,38 @@
 
       // Função de processamento e navegação
       const handleNavigation = (type) => {
-        const form = document.getElementById('selectionForm');
-        const mesValue = document.getElementById('mes').value;
-        const municipioValue = document.getElementById('municipio').value;
-        const comumValue = document.getElementById('comum').value;
+        const mes = document.getElementById('mes').value;
+        const municipio = document.getElementById('municipio').value;
+        const comum = document.getElementById('comum').value;
 
-        if (!mesValue || !municipioValue || !comumValue) {
+        console.log('Validando navegação:', { mes, municipio, comum });
+
+        if (!mes || !municipio || !comum) {
+          // Tenta recuperar do search se estiver preenchido mas não "clicado"
+          const searchVal = document.getElementById('comumSearch').value;
+          if (searchVal && (!comum || !municipio)) {
+            // Se o usuário digitou mas não clicou, tentamos pegar o primeiro resultado
+            const firstResult = document.querySelector('.sac-search-item');
+            if (firstResult) {
+              document.getElementById('comum').value = firstResult.dataset.value;
+              document.getElementById('municipio').value = firstResult.dataset.city;
+              return handleNavigation(type); // Tenta de novo
+            }
+          }
+
           Swal.fire({
             title: 'Campos Incompletos',
             text: 'Por favor, selecione o Mês, Município e Casa de Oração antes de prosseguir.',
             icon: 'warning',
-            confirmButtonColor: '#1e4b7a'
+            confirmButtonColor: '#003049'
           });
           return;
         }
 
-        const data = {
-          mes: mesValue,
-          municipio: municipioValue,
-          comum: comumValue,
-          type: type
-        };
-
         // Calcular domingos
-        const mesIndex = meses.indexOf(data.mes);
-        const year = now.getFullYear();
+        const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const mesIndex = mesesNomes.indexOf(mes);
+        const year = new Date().getFullYear();
         const sundays = [];
         const d = new Date(year, mesIndex, 1);
         while (d.getMonth() === mesIndex) {
@@ -177,8 +184,15 @@
           d.setDate(d.getDate() + 1);
         }
         
-        data.sundays = sundays;
-        sessionStorage.setItem('recitativos_config', JSON.stringify(data));
+        const configData = {
+          mes,
+          municipio,
+          comum,
+          type,
+          sundays
+        };
+        
+        sessionStorage.setItem('recitativos_config', JSON.stringify(configData));
         window.location.href = '/cadastro';
       };
 
