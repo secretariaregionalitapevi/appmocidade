@@ -9,6 +9,6 @@
     "dev": "node --watch src/server.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }
