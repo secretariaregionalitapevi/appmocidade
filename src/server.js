@@ -39,7 +39,7 @@ const WEBHOOK_CADASTRO = process.env.WEBHOOK_CADASTRO || "https://webhooks.renda
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const SUPABASE_TABLE_RECITATIVOS = process.env.SUPABASE_TABLE_RECITATIVOS || "recitativos";
+const SUPABASE_TABLE_RECITATIVOS = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
 const WEBHOOK_RECITATIVOS = process.env.WEBHOOK_RECITATIVOS || "";
 const REQUIRE_SUPABASE_DUPLICATE_CHECK = (process.env.REQUIRE_SUPABASE_DUPLICATE_CHECK || "true").toLowerCase() !== "false";
 const ENABLE_LOCAL_PERSISTENCE = (process.env.ENABLE_LOCAL_PERSISTENCE || "false").toLowerCase() === "true";
@@ -276,48 +276,44 @@ async function readSavedRecitativosByDate(dateValue) {
   ));
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn("[DuplicateCheck] Supabase não configurado. Verificando apenas local.");
     return localEntries;
   }
 
-  const table = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
+  const table = SUPABASE_TABLE_RECITATIVOS;
   const remoteEntries = [];
-  const candidateDates = [normalizedDate, brDate];
+  const candidateDates = [normalizedDate, brDate].filter(Boolean);
 
   for (const date of candidateDates) {
-    if (!date) continue;
     const url = new URL(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}`);
     url.searchParams.set("select", "*");
     url.searchParams.set("data_reuniao", `eq.${date}`);
-    url.searchParams.set("limit", "100");
 
-    console.log(`[DuplicateCheck] Consultando Supabase (${date}): ${url.toString()}`);
+    console.log(`[DuplicateCheck] Consultando: ${url.toString()}`);
 
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-        }
-      });
-
-      if (response.ok) {
-        const rows = await response.json();
-        console.log(`[DuplicateCheck] Encontrado ${rows.length} registros para ${date}`);
-        for (const row of rows) {
-          remoteEntries.push({
-            id: row.id || "",
-            tipo: "recitativo",
-            payload: row,
-            createdAt: row.created_at || row.createdAt || ""
-          });
-        }
-      } else {
-        const errText = await response.text();
-        console.error(`[DuplicateCheck] Erro (${date}): ${response.status} - ${errText}`);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
       }
-    } catch (err) {
-      console.error(`[DuplicateCheck] Falha fetch (${date}):`, err);
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[DuplicateCheck] ERRO CRÍTICO no Supabase: ${response.status} - ${errText}`);
+      throw new Error(`VALI_DUP_FAILED:${response.status}`);
+    }
+
+    const rows = await response.json();
+    console.log(`[DuplicateCheck] Encontrado ${rows.length} registros para a data ${date}`);
+    for (const row of rows) {
+      remoteEntries.push({
+        id: row.id || "",
+        tipo: "recitativo",
+        payload: row,
+        createdAt: row.created_at || row.createdAt || ""
+      });
     }
   }
 
@@ -751,7 +747,7 @@ async function handleRequest(req, res) {
         // Salvar no Supabase
         const supabaseUrl = process.env.SUPABASE_URL;
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const supabaseTable = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
+        const supabaseTable = SUPABASE_TABLE_RECITATIVOS;
 
         if (supabaseUrl && supabaseKey) {
           const url = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${supabaseTable}`);
@@ -870,13 +866,13 @@ async function handleRequest(req, res) {
       return;
     }
 
-    if (typeof error.message === "string" && error.message.startsWith("supabase_duplicate_check_failed:")) {
-      sendJson(res, 502, { error: "Falha ao validar duplicidade no Supabase." });
+    if (typeof error.message === "string" && (error.message.startsWith("supabase_duplicate_check_failed:") || error.message.startsWith("VALI_DUP_FAILED:"))) {
+      sendJson(res, 502, { error: "TRAVA DE SEGURANÇA: Falha ao validar duplicidade no banco de dados. Tente novamente em instantes." });
       return;
     }
 
     if (error.message === "supabase_duplicate_check_not_configured") {
-      sendJson(res, 500, { error: "Validação de duplicidade exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY." });
+      sendJson(res, 500, { error: "TRAVA DE SEGURANÇA: Configuração incompleta para verificação de duplicidades." });
       return;
     }
 
