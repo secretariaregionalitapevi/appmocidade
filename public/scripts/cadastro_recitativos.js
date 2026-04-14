@@ -82,13 +82,58 @@ document.addEventListener('DOMContentLoaded', async () => {
           <input type="number" name="total_comparecimento_${index}" min="0" value="0" required>
         </div>
       </div>
+      <div class="suspension-row">
+        <label class="suspension-toggle">
+          <input type="checkbox" name="suspenso_${index}" class="suspension-checkbox">
+          <span>Justificar falta de reunião de jovens</span>
+        </label>
+        <div class="justification-area hidden">
+          <label style="font-size: 11px; margin-bottom: 4px; display: block; color: var(--muted); text-transform: uppercase; font-weight: 700;">Motivo do Cancelamento:</label>
+          <select name="justificativa_pre_${index}" class="justification-select">
+            <option value="">-- Selecione o motivo --</option>
+            <option value="Reforma">Reforma</option>
+            <option value="Culto de Mocidade">Culto de Mocidade</option>
+            <option value="Evento Regional">Evento Regional</option>
+            <option value="Outros">Outros</option>
+          </select>
+          <input type="text" name="justificativa_custom_${index}" class="form-control other-justification hidden" placeholder="Descreva o motivo..." style="margin-top: 8px;">
+        </div>
+      </div>
     `;
 
     // Adicionar listener para cálculo automático e UX de limpar o zero
-    const inputs = card.querySelectorAll('.count-input, input[type="number"]:not([readonly])');
+    const countInputs = card.querySelectorAll('.count-input, input[name="total_comparecimento_${index}"]');
     const totalField = card.querySelector(`input[name="total_recitativos_${index}"]`);
+    const suspensionCheckbox = card.querySelector(`.suspension-checkbox`);
+    const justificationArea = card.querySelector(`.justification-area`);
+    const justificationSelect = card.querySelector(`.justification-select`);
+    const justificationCustom = card.querySelector(`.other-justification`);
     
-    inputs.forEach(input => {
+    // Lógica de Suspensão/Justificativa
+    suspensionCheckbox.addEventListener('change', (e) => {
+      const isSuspended = e.target.checked;
+      card.classList.toggle('suspension-active', isSuspended);
+      justificationArea.classList.toggle('hidden', !isSuspended);
+      
+      countInputs.forEach(input => {
+        input.disabled = isSuspended;
+        if (isSuspended) {
+          input.value = "0";
+          // Disparar input para recalcular total
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+      justificationSelect.required = isSuspended;
+    });
+
+    justificationSelect.addEventListener('change', (e) => {
+      const isOther = e.target.value === 'Outros';
+      justificationCustom.classList.toggle('hidden', !isOther);
+      justificationCustom.required = isOther;
+    });
+
+    const allNumberInputs = card.querySelectorAll('input[type="number"]:not([readonly])');
+    allNumberInputs.forEach(input => {
       // Limpar o zero ao focar
       input.addEventListener('focus', () => {
         if (input.value === "0") input.value = "";
@@ -96,13 +141,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Voltar para zero se vazio ao desfocar
       input.addEventListener('blur', () => {
-        if (input.value === "") input.value = "0";
+        if (input.value === "") {
+          input.value = "0";
+          input.dispatchEvent(new Event('input'));
+        }
       });
 
       input.addEventListener('input', () => {
         let sum = 0;
-        const countInputs = card.querySelectorAll('.count-input');
-        countInputs.forEach(i => sum += parseInt(i.value || 0));
+        const recInputs = card.querySelectorAll('.count-input');
+        recInputs.forEach(i => sum += parseInt(i.value || 0));
         totalField.value = sum;
       });
     });
@@ -148,6 +196,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const entries = [];
     if (config.type === 'all') {
       config.sundays.forEach((_, i) => {
+        const isSus = rawData[`suspenso_${i}`] === 'on';
+        let just = '-';
+        if (isSus) {
+          const pre = rawData[`justificativa_pre_${i}`];
+          just = pre === 'Outros' ? (rawData[`justificativa_custom_${i}`] || 'Outro') : pre;
+        }
+
         entries.push({
           data_reuniao: rawData[`date_${i}`],
           meninas: parseInt(rawData[`meninas_${i}`] || 0),
@@ -156,6 +211,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           mocos: parseInt(rawData[`mocos_${i}`] || 0),
           total_recitativos: parseInt(rawData[`total_recitativos_${i}`] || 0),
           total_comparecimento: parseInt(rawData[`total_comparecimento_${i}`] || 0),
+          suspenso: isSus ? 'Sim' : 'Não',
+          justificativa: just,
           municipio: config.municipio,
           comum: config.comum,
           auxiliar_id: user.id,
@@ -168,6 +225,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         Swal.fire('Aviso', 'Selecione a data do domingo.', 'warning');
         return;
       }
+      const isSus = rawData[`suspenso_0`] === 'on';
+      let just = '-';
+      if (isSus) {
+        const pre = rawData[`justificativa_pre_0`];
+        just = pre === 'Outros' ? (rawData[`justificativa_custom_0`] || 'Outro') : pre;
+      }
+
       entries.push({
         data_reuniao: selectedDateSelect.value,
         meninas: parseInt(rawData[`meninas_0`] || 0),
@@ -176,6 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         mocos: parseInt(rawData[`mocos_0`] || 0),
         total_recitativos: parseInt(rawData[`total_recitativos_0`] || 0),
         total_comparecimento: parseInt(rawData[`total_comparecimento_0`] || 0),
+        suspenso: isSus ? 'Sim' : 'Não',
+        justificativa: just,
         municipio: config.municipio,
         comum: config.comum,
         auxiliar_id: user.id,
