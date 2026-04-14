@@ -279,9 +279,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             html: `A congregação <b>${dup.comum}</b> já enviou as contagens para o dia <b>${dup.dataReuniao}</b>.<br><br>
                    <small style="color: #666;">(Salvo no sistema em: ${formattedCreated})</small>`,
             icon: 'info',
-            timer: 2500,
+            timer: 5000,
             timerProgressBar: true,
-            showConfirmButton: false
+            showConfirmButton: true,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#1a4d7c'
           });
           return;
         }
