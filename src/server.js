@@ -269,6 +269,7 @@ function buildRecitativoDuplicateDetails(entry) {
 
 async function readSavedRecitativosByDate(dateValue) {
   const normalizedDate = normalizeDate(dateValue);
+  const brDate = formatDateBR(normalizedDate);
   const localEntries = (await readLocalEntries()).filter((entry) => (
     entry.tipo === "recitativo" &&
     normalizeDate(entry.payload?.data_reuniao) === normalizedDate
@@ -280,34 +281,44 @@ async function readSavedRecitativosByDate(dateValue) {
 
   const table = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
   const remoteEntries = [];
+  const candidateDates = [normalizedDate, brDate];
 
-  const url = new URL(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}`);
-  url.searchParams.set("select", "*");
-  url.searchParams.set("data_reuniao", `eq.${normalizedDate}`);
-  url.searchParams.set("limit", "200");
+  for (const date of candidateDates) {
+    if (!date) continue;
+    const url = new URL(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}`);
+    url.searchParams.set("select", "*");
+    url.searchParams.set("data_reuniao", `eq.${date}`);
+    url.searchParams.set("limit", "100");
 
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+    console.log(`[DuplicateCheck] Consultando Supabase (${date}): ${url.toString()}`);
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+        }
+      });
+
+      if (response.ok) {
+        const rows = await response.json();
+        console.log(`[DuplicateCheck] Encontrado ${rows.length} registros para ${date}`);
+        for (const row of rows) {
+          remoteEntries.push({
+            id: row.id || "",
+            tipo: "recitativo",
+            payload: row,
+            createdAt: row.created_at || row.createdAt || ""
+          });
+        }
+      } else {
+        const errText = await response.text();
+        console.error(`[DuplicateCheck] Erro (${date}): ${response.status} - ${errText}`);
       }
-    });
-
-    if (response.ok) {
-      const rows = await response.json();
-      for (const row of rows) {
-        remoteEntries.push({
-          id: row.id || "",
-          tipo: "recitativo",
-          payload: row,
-          createdAt: row.created_at || row.createdAt || ""
-        });
-      }
+    } catch (err) {
+      console.error(`[DuplicateCheck] Falha fetch (${date}):`, err);
     }
-  } catch (err) {
-    console.error("Falha ao buscar duplicados no Supabase:", err);
   }
 
   const deduped = new Map();
@@ -324,10 +335,14 @@ function detectRecitativoDuplicate(payload, entries) {
   const meetingDate = normalizeDate(payload.data_reuniao);
   if (!common || !meetingDate) return { duplicate: false };
 
+  console.log(`[Detect] Comparando Novo: "${common}" em ${meetingDate} com ${entries.length} existentes.`);
+
   for (const entry of entries) {
     const existing = entry.payload || {};
     const existingCommon = normalizeText(getRecitativoComum(existing));
     const existingMeetingDate = normalizeDate(existing.data_reuniao);
+
+    console.log(`[Detect] Verificando: "${existingCommon}" em ${existingMeetingDate}`);
 
     if (common === existingCommon && meetingDate === existingMeetingDate) {
       return {
@@ -707,14 +722,18 @@ async function handleRequest(req, res) {
       const payloads = Array.isArray(payload) ? payload : [payload];
       const savedEntries = [];
 
+      console.log(`[Batch] Processando ${payloads.length} itens.`);
       for (const item of payloads) {
+        console.log(`[Item] Verificando duplicado para: ${item.comum} na data ${item.data_reuniao}`);
         // Trava de segurança contra duplicados (Pulo do Gato)
         if (REQUIRE_SUPABASE_DUPLICATE_CHECK) {
           try {
             const existingRecitativos = await readSavedRecitativosByDate(item.data_reuniao);
+            console.log(`[Item] Registros existentes encontrados: ${existingRecitativos.length}`);
+            
             const duplicateCheck = detectRecitativoDuplicate(item, existingRecitativos);
             if (duplicateCheck.duplicate) {
-              console.log(`[Server] Tentativa de duplicado detectada: ${item.comum} na data ${item.data_reuniao}`);
+              console.log(`[Server] BLOQUEIO: Duplicado detectado para ${item.comum}`);
               return sendJson(res, 409, {
                 error: "DADOS JÁ CADASTRADOS: Esta congregação já realizou o lançamento nesta data.",
                 duplicate: buildRecitativoDuplicateDetails(duplicateCheck.matchedEntry)
