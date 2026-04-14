@@ -296,8 +296,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     } catch (err) {
       Swal.fire({
-        title: 'Erro',
-        text: err.message,
+        title: 'Atenção',
+        html: err.message,
         icon: 'error',
         confirmButtonColor: '#1a4d7c'
       });

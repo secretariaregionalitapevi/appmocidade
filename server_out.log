@@ -1,0 +1,11 @@
+Servidor iniciado em http://localhost:3001
+[Batch] Processando 1 itens.
+[Item] Verificando duplicado para: BR-22-0673 - VILA DOUTOR CARDOSO na data 12/04/2026
+[DuplicateCheck] Consultando: https://sqamxlhfazulrisiptud.supabase.co/rest/v1/rjm_recitativos?select=*&data_reuniao=eq.2026-04-12
+[DuplicateCheck] Encontrado 0 registros para a data 2026-04-12
+[DuplicateCheck] Consultando: https://sqamxlhfazulrisiptud.supabase.co/rest/v1/rjm_recitativos?select=*&data_reuniao=eq.12%2F04%2F2026
+[DuplicateCheck] Encontrado 11 registros para a data 12/04/2026
+[Item] Registros existentes encontrados: 11
+[Detect] Comparando Novo: "br 22 0673 vila doutor cardoso" em 2026-04-12 com 11 existentes.
+[Detect] Verificando: "br 22 0673 vila doutor cardoso" em 2026-04-12
+[Server] BLOQUEIO: Duplicado detectado para BR-22-0673 - VILA DOUTOR CARDOSO
