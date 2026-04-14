@@ -24,36 +24,38 @@
   </div>
 
   <main class="auth-wrap">
-    <div class="card" style="width: min(800px, 100%);">
-      <header class="card-header">
-        <img src="/assets/logo-ccb.png" alt="CCB" class="logo" />
-        <h1>Lançamento</h1>
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; margin: 60px 0;">
+      <div class="card" style="width: min(800px, 100%);">
+        <header class="card-header">
+          <img src="/assets/logo-ccb.png" alt="CCB" class="logo" />
+          <h1>Lançamento</h1>
 
-        <p id="headerSubtitle">Sistema de Lançamentos de Recitativos</p>
-      </header>
+          <p id="headerSubtitle">Sistema de Lançamentos de Recitativos</p>
+        </header>
 
-      <div class="card-body">
-        <div id="selectionSummary" style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 15px; border-left: 4px solid var(--brand); line-height: 1.6;">
-          Carregando informações...
+        <div class="card-body">
+          <div id="selectionSummary" style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 15px; border-left: 4px solid var(--brand); line-height: 1.6;">
+            Carregando informações...
+          </div>
+
+
+          <form id="recitativosForm">
+            <div id="datePickerRow" class="form-group hidden">
+              <label for="selectedDate">Selecione o Domingo</label>
+              <select id="selectedDate" name="selected_date">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+
+            <div id="cardsContainer">
+              <!-- Cards gerados dinamicamente -->
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Finalizar e Enviar Lançamentos</button>
+          </form>
         </div>
 
-
-        <form id="recitativosForm">
-          <div id="datePickerRow" class="form-group hidden">
-            <label for="selectedDate">Selecione o Domingo</label>
-            <select id="selectedDate" name="selected_date">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div id="cardsContainer">
-            <!-- Cards gerados dinamicamente -->
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-block">Finalizar e Enviar Lançamentos</button>
-        </form>
       </div>
-
       <footer class="sac-page-footer">
         <span class="footer-brand">&copy; Aplicativo da Mocidade v1.0</span>
         <a href="#" class="footer-ccb">Congregação Cristã no Brasil</a>

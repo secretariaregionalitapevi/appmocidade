@@ -13,40 +13,42 @@
 <body style="background: #f1f5f9; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <main class="auth-wrap" style="padding: 0; display: flex; align-items: center; justify-content: center; width: 100%;">
 
-    <div class="sac-card" style="width: min(600px, 95%); position: relative;">
-      <button id="btnLogout" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; z-index: 10; text-transform: uppercase; transition: all 0.3s;">Voltar</button>
-      <header class="sac-header">
-        <img src="/assets/logo-ccb.png" alt="CCB" class="sac-logo" />
-        <h1 class="sac-title">Lançamento de Recitativos</h1>
-        <p class="sac-subtitle">Aplicativo da Mocidade - Regional Itapevi</p>
-      </header>
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; margin: 60px 0;">
+      <div class="sac-card" style="width: min(600px, 95%); position: relative;">
+        <button id="btnLogout" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; z-index: 10; text-transform: uppercase; transition: all 0.3s;">Voltar</button>
+        <header class="sac-header">
+          <img src="/assets/logo-ccb.png" alt="CCB" class="sac-logo" />
+          <h1 class="sac-title">Lançamento de Recitativos</h1>
+          <p class="sac-subtitle">Aplicativo da Mocidade - Regional Itapevi</p>
+        </header>
 
-      <div class="sac-body">
-        <form id="selectionForm" class="sac-form">
-          <div class="form-group">
-            <div class="input-icon-box" style="width: 140px; font-size: 13px; font-weight: 700; color: #1e3a5a; text-transform: uppercase;">Mês</div>
-            <select id="mes" name="mes" required></select>
-          </div>
-
-          <input type="hidden" id="municipio" name="municipio" required />
-
-          <div class="form-group">
-            <div class="input-icon-box" style="width: 140px; font-size: 13px; font-weight: 700; color: #1e3a5a; text-transform: uppercase;">Comum</div>
-            <div class="sac-search-container">
-              <input type="text" id="comumSearch" placeholder="Pesquise sua Comum..." autocomplete="off" />
-              <input type="hidden" id="comum" name="comum" required />
-              <div id="comumResults" class="sac-search-results"></div>
+        <div class="sac-body">
+          <form id="selectionForm" class="sac-form">
+            <div class="form-group">
+              <div class="input-icon-box" style="width: 140px; font-size: 13px; font-weight: 700; color: #1e3a5a; text-transform: uppercase;">Mês</div>
+              <select id="mes" name="mes" required></select>
             </div>
-          </div>
 
-          <div style="margin-top: 30px;">
-            <p style="margin-bottom: 20px; color: #64748b; font-size: 14px;">Selecione o tipo de lançamento para continuar:</p>
-            <div class="grid-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <button type="button" class="sac-btn" data-type="all" style="margin-top: 0; font-size: 14px;">TODOS os domingos</button>
-              <button type="button" class="sac-btn" data-type="one" style="margin-top: 0; background: #64748b; font-size: 14px;">APENAS UM domingo</button>
+            <input type="hidden" id="municipio" name="municipio" required />
+
+            <div class="form-group">
+              <div class="input-icon-box" style="width: 140px; font-size: 13px; font-weight: 700; color: #1e3a5a; text-transform: uppercase;">Comum</div>
+              <div class="sac-search-container">
+                <input type="text" id="comumSearch" placeholder="Pesquise sua Comum..." autocomplete="off" />
+                <input type="hidden" id="comum" name="comum" required />
+                <div id="comumResults" class="sac-search-results"></div>
+              </div>
             </div>
-          </div>
-        </form>
+
+            <div style="margin-top: 30px;">
+              <p style="margin-bottom: 20px; color: #64748b; font-size: 14px;">Selecione o tipo de lançamento para continuar:</p>
+              <div class="grid-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button type="button" class="sac-btn" data-type="all" style="margin-top: 0; font-size: 14px;">TODOS os domingos</button>
+                <button type="button" class="sac-btn" data-type="one" style="margin-top: 0; background: #64748b; font-size: 14px;">APENAS UM domingo</button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
 
       <footer class="sac-page-footer">
