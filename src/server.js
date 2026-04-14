@@ -717,6 +717,7 @@ async function handleRequest(req, res) {
       const payload = await readJsonBody(req);
       const payloads = Array.isArray(payload) ? payload : [payload];
       const savedEntries = [];
+      const skippedEntries = [];
 
       console.log(`[Batch] Processando ${payloads.length} itens.`);
       for (const item of payloads) {
@@ -729,11 +730,12 @@ async function handleRequest(req, res) {
             
             const duplicateCheck = detectRecitativoDuplicate(item, existingRecitativos);
             if (duplicateCheck.duplicate) {
-              console.log(`[Server] BLOQUEIO: Duplicado detectado para ${item.comum}`);
-              return sendJson(res, 409, {
-                error: "DADOS JÁ CADASTRADOS: Esta congregação já realizou o lançamento nesta data.",
+              console.log(`[Server] BLOQUEIO PARCIAL: Duplicado detectado para ${item.comum} na data ${item.data_reuniao}`);
+              skippedEntries.push({
+                item,
                 duplicate: buildRecitativoDuplicateDetails(duplicateCheck.matchedEntry)
               });
+              continue;
             }
           } catch (err) {
             console.error("Falha ao validar duplicados:", err);
@@ -794,9 +796,17 @@ async function handleRequest(req, res) {
         }
       }
 
+      if (savedEntries.length === 0 && skippedEntries.length > 0) {
+        return sendJson(res, 409, {
+          error: "DADOS JÁ CADASTRADOS: Esta congregação já realizou o lançamento nesta data.",
+          duplicate: skippedEntries[0].duplicate
+        });
+      }
+
       sendJson(res, 201, { 
-        message: payloads.length > 1 ? "Lançamentos realizados com sucesso." : "Lançamento realizado com sucesso.", 
-        ids: savedEntries.map(e => e.id) 
+        message: payloads.length > 1 ? "Lançamentos processados." : "Lançamento realizado com sucesso.", 
+        ids: savedEntries.map(e => e.id),
+        skipped: skippedEntries
       });
       return;
     }

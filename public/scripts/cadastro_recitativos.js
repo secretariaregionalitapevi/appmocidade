@@ -269,15 +269,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
-      // Enviar todos os lançamentos em um único lote (Batch)
       const res = await fetch('/api/recitativos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entries)
       });
+      
+      const responseData = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
+        const errorData = responseData;
 
         // Tratar Trava de Segurança (Duplicados)
         if (res.status === 409 && errorData.duplicate) {
@@ -302,12 +303,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error(errorData.error || 'Falha ao enviar os lançamentos');
       }
 
+      let alertTitle = 'Sucesso!';
+      let alertHtml = 'Lançamento realizado com sucesso.';
+      let alertIcon = 'success';
+
+      if (responseData.skipped && responseData.skipped.length > 0) {
+        const skippedDates = responseData.skipped.map(s => s.duplicate.dataReuniao).join(', ');
+        alertTitle = 'Sucesso Parcial';
+        alertHtml = `<b>Os domingos novos foram salvos!</b><br><br>
+                     <small style="color: #b91c1c;">Atenção: Os dias <b>${skippedDates}</b> foram ignorados pois já constavam no sistema.</small>`;
+        alertIcon = 'warning';
+      }
+
       Swal.fire({
-        title: 'Sucesso!',
-        text: 'Lançamento realizado com sucesso.',
-        icon: 'success',
-        timer: 2500,
+        title: alertTitle,
+        html: alertHtml,
+        icon: alertIcon,
+        timer: responseData.skipped && responseData.skipped.length > 0 ? 8000 : 5000,
         timerProgressBar: true,
+        showConfirmButton: true,
+        confirmButtonText: 'OK',
         confirmButtonColor: '#1a4d7c'
       }).then(() => {
         window.location.href = '/';
