@@ -241,6 +241,107 @@ function buildDuplicateDetails(tipo, entry) {
   };
 }
 
+function formatDateBR(value) {
+  const normalized = normalizeDate(value);
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return String(value || "").trim() || "--/--/----";
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function getRecitativoComum(payload = {}) {
+  return String(payload.comum || payload.localidade || "").trim();
+}
+
+function getRecitativoMunicipio(payload = {}) {
+  return String(payload.municipio || payload.cidade || "").trim();
+}
+
+function buildRecitativoDuplicateDetails(entry) {
+  const existing = entry?.payload || {};
+
+  return {
+    comum: getRecitativoComum(existing) || "Comum não informada",
+    municipio: getRecitativoMunicipio(existing) || "Município não informado",
+    dataReuniao: formatDateBR(existing.data_reuniao),
+    createdAt: entry?.createdAt || existing.created_at || existing.createdAt || ""
+  };
+}
+
+async function readSavedRecitativosByDate(dateValue) {
+  const normalizedDate = normalizeDate(dateValue);
+  const localEntries = (await readLocalEntries()).filter((entry) => (
+    entry.tipo === "recitativo" &&
+    normalizeDate(entry.payload?.data_reuniao) === normalizedDate
+  ));
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return localEntries;
+  }
+
+  const table = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
+  const remoteEntries = [];
+
+  const url = new URL(`${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}`);
+  url.searchParams.set("select", "*");
+  url.searchParams.set("data_reuniao", `eq.${normalizedDate}`);
+  url.searchParams.set("limit", "200");
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+      }
+    });
+
+    if (response.ok) {
+      const rows = await response.json();
+      for (const row of rows) {
+        remoteEntries.push({
+          id: row.id || "",
+          tipo: "recitativo",
+          payload: row,
+          createdAt: row.created_at || row.createdAt || ""
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Falha ao buscar duplicados no Supabase:", err);
+  }
+
+  const deduped = new Map();
+  for (const entry of [...remoteEntries, ...localEntries]) {
+    const key = `${entry.id}::${JSON.stringify(entry.payload || {})}`;
+    if (!deduped.has(key)) deduped.set(key, entry);
+  }
+
+  return [...deduped.values()];
+}
+
+function detectRecitativoDuplicate(payload, entries) {
+  const common = normalizeText(getRecitativoComum(payload));
+  const meetingDate = normalizeDate(payload.data_reuniao);
+  if (!common || !meetingDate) return { duplicate: false };
+
+  for (const entry of entries) {
+    const existing = entry.payload || {};
+    const existingCommon = normalizeText(getRecitativoComum(existing));
+    const existingMeetingDate = normalizeDate(existing.data_reuniao);
+
+    if (common === existingCommon && meetingDate === existingMeetingDate) {
+      return {
+        duplicate: true,
+        matchedId: entry.id,
+        reason: "comum_e_data",
+        matchedEntry: entry
+      };
+    }
+  }
+
+  return { duplicate: false };
+}
+
 async function readSavedEntries() {
   const localEntries = await readLocalEntries();
 
@@ -607,6 +708,23 @@ async function handleRequest(req, res) {
       const savedEntries = [];
 
       for (const item of payloads) {
+        // Trava de segurança contra duplicados (Pulo do Gato)
+        if (REQUIRE_SUPABASE_DUPLICATE_CHECK) {
+          try {
+            const existingRecitativos = await readSavedRecitativosByDate(item.data_reuniao);
+            const duplicateCheck = detectRecitativoDuplicate(item, existingRecitativos);
+            if (duplicateCheck.duplicate) {
+              console.log(`[Server] Tentativa de duplicado detectada: ${item.comum} na data ${item.data_reuniao}`);
+              return sendJson(res, 409, {
+                error: "DADOS JÁ CADASTRADOS: Esta congregação já realizou o lançamento nesta data.",
+                duplicate: buildRecitativoDuplicateDetails(duplicateCheck.matchedEntry)
+              });
+            }
+          } catch (err) {
+            console.error("Falha ao validar duplicados:", err);
+          }
+        }
+
         // Salvar localmente (se habilitado no .env)
         const saved = await saveSubmission("recitativo", item);
         savedEntries.push(saved);

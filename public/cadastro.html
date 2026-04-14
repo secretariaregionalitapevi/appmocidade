@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,6 +11,7 @@
   <script src="/scripts/auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
   <div class="top-nav">
     <div style="display: flex; align-items: center; gap: 12px;">
@@ -23,17 +25,19 @@
   </div>
 
   <main class="auth-wrap">
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; margin: 60px 0;">
+    <div
+      style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; margin: 60px 0;">
       <div class="card" style="width: min(800px, 100%);">
         <header class="card-header">
           <img src="/assets/logo-ccb.png" alt="CCB" class="logo" />
-          <h1>Lançamento</h1>
+          <h1>Lançamento Recitativos</h1>
 
           <p id="headerSubtitle">Sistema de Lançamentos de Recitativos</p>
         </header>
 
         <div class="card-body">
-          <div id="selectionSummary" style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 15px; border-left: 4px solid var(--brand); line-height: 1.6;">
+          <div id="selectionSummary"
+            style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 15px; border-left: 4px solid var(--brand); line-height: 1.6;">
             Carregando informações...
           </div>
 
@@ -73,7 +77,7 @@
           window.updateSummaryWithName(window.currentUser);
         }
       }
-      
+
       const btnLogout = document.getElementById('btnLogoutTop');
       if (btnLogout) {
         btnLogout.onclick = async () => {
@@ -87,4 +91,5 @@
   </script>
   <script src="/scripts/cadastro_recitativos.js"></script>
 </body>
+
 </html>

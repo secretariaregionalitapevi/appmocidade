@@ -266,7 +266,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
+
+        // Tratar Trava de Segurança (Duplicados)
+        if (res.status === 409 && errorData.duplicate) {
+          const dup = errorData.duplicate;
+          const dt = new Date(dup.createdAt);
+          const formattedCreated = `${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR', { hour12: false })}`;
+
+          throw new Error(`
+            <strong>LANÇAMENTO JÁ EXISTENTE!</strong><br><br>
+            A congregação <strong>${dup.comum}</strong> já possui um registro para o dia <strong>${dup.dataReuniao}</strong>.<br><br>
+            <small>Registrado em: ${formattedCreated}</small>
+          `);
+        }
+
         throw new Error(errorData.error || 'Falha ao enviar os lançamentos');
       }
 
