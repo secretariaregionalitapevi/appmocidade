@@ -81,9 +81,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           <label>Total de Recitativos</label>
           <input type="number" name="total_recitativos_${index}" value="0" readonly style="background: #f8fafc; font-weight: bold; color: var(--brand);">
         </div>
-        <div class="form-group" style="grid-column: 1 / -1; margin-top: 8px;">
-          <label>Total Geral (Comparecimento + Recitativos)</label>
-          <input type="number" name="total_geral_${index}" value="0" readonly style="background: #eef2f6; font-weight: bold; color: #1a4d7c; border: 2px solid #cbd5e1; font-size: 16px;">
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 8px; text-align: center;">
+          <label style="text-align: center;">Total Geral (Comparecimento + Recitativos)</label>
+          <input type="number" name="total_geral_${index}" value="0" readonly style="background: #eef2f6; font-weight: bold; color: #1a4d7c; border: 2px solid #cbd5e1; font-size: 16px; text-align: center;">
         </div>
       </div>
       <div class="suspension-row">
