@@ -274,11 +274,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           const dt = new Date(dup.createdAt);
           const formattedCreated = `${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR', { hour12: false })}`;
 
-          throw new Error(`
-            <strong>LANÇAMENTO JÁ EXISTENTE!</strong><br><br>
-            A congregação <strong>${dup.comum}</strong> já possui um registro para o dia <strong>${dup.dataReuniao}</strong>.<br><br>
-            <small>Registrado em: ${formattedCreated}</small>
-          `);
+          Swal.fire({
+            title: 'Lançamento já recebido!',
+            html: `A congregação <b>${dup.comum}</b> já enviou as contagens para o dia <b>${dup.dataReuniao}</b>.<br><br>
+                   <small style="color: #666;">(Salvo no sistema em: ${formattedCreated})</small>`,
+            icon: 'info',
+            timer: 2500,
+            timerProgressBar: true,
+            showConfirmButton: false
+          });
+          return;
         }
 
         throw new Error(errorData.error || 'Falha ao enviar os lançamentos');
