@@ -74,12 +74,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           <input type="number" name="mocos_${index}" min="0" value="0" required class="count-input">
         </div>
         <div class="form-group">
+          <label>Total de Comparecimento</label>
+          <input type="number" name="total_comparecimento_${index}" min="0" value="0" required>
+        </div>
+        <div class="form-group">
           <label>Total de Recitativos</label>
           <input type="number" name="total_recitativos_${index}" value="0" readonly style="background: #f8fafc; font-weight: bold; color: var(--brand);">
         </div>
-        <div class="form-group">
-          <label>Total de Comparecimento</label>
-          <input type="number" name="total_comparecimento_${index}" min="0" value="0" required>
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 8px;">
+          <label>Total Geral (Comparecimento + Recitativos)</label>
+          <input type="number" name="total_geral_${index}" value="0" readonly style="background: #eef2f6; font-weight: bold; color: #1a4d7c; border: 2px solid #cbd5e1; font-size: 16px;">
         </div>
       </div>
       <div class="suspension-row">
@@ -102,8 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     // Adicionar listener para cálculo automático e UX de limpar o zero
-    const countInputs = card.querySelectorAll('.count-input, input[name="total_comparecimento_${index}"]');
+    const countInputs = card.querySelectorAll('.count-input');
+    const comparecimentoInput = card.querySelector(`input[name="total_comparecimento_${index}"]`);
+    const allNumberInputsNodeList = card.querySelectorAll('input[type="number"]:not([readonly])');
+    
     const totalField = card.querySelector(`input[name="total_recitativos_${index}"]`);
+    const totalGeralField = card.querySelector(`input[name="total_geral_${index}"]`);
     const suspensionCheckbox = card.querySelector(`.suspension-checkbox`);
     const justificationArea = card.querySelector(`.justification-area`);
     const justificationSelect = card.querySelector(`.justification-select`);
@@ -115,11 +123,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.classList.toggle('suspension-active', isSuspended);
       justificationArea.classList.toggle('hidden', !isSuspended);
       
-      countInputs.forEach(input => {
+      const inputsToToggle = [...countInputs, comparecimentoInput];
+      inputsToToggle.forEach(input => {
         input.disabled = isSuspended;
         if (isSuspended) {
           input.value = "0";
-          // Disparar input para recalcular total
           input.dispatchEvent(new Event('input'));
         }
       });
@@ -132,8 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       justificationCustom.required = isOther;
     });
 
-    const allNumberInputs = card.querySelectorAll('input[type="number"]:not([readonly])');
-    allNumberInputs.forEach(input => {
+    allNumberInputsNodeList.forEach(input => {
       // Limpar o zero ao focar
       input.addEventListener('focus', () => {
         if (input.value === "0") input.value = "";
@@ -148,10 +155,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       input.addEventListener('input', () => {
-        let sum = 0;
-        const recInputs = card.querySelectorAll('.count-input');
-        recInputs.forEach(i => sum += parseInt(i.value || 0));
-        totalField.value = sum;
+        // Calcular Recitativos
+        let sumRec = 0;
+        countInputs.forEach(i => sumRec += parseInt(i.value || 0));
+        totalField.value = sumRec;
+
+        // Calcular Total Geral
+        const comp = parseInt(comparecimentoInput.value || 0);
+        totalGeralField.value = sumRec + comp;
       });
     });
 
