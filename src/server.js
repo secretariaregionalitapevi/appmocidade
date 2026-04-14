@@ -603,60 +603,68 @@ async function handleRequest(req, res) {
 
     if (req.method === "POST" && pathname === "/api/recitativos") {
       const payload = await readJsonBody(req);
-      
-      // Salvar localmente (se habilitado no .env)
-      const saved = await saveSubmission("recitativo", payload);
+      const payloads = Array.isArray(payload) ? payload : [payload];
+      const savedEntries = [];
 
-      // Salvar no Supabase
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      const supabaseTable = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
+      for (const item of payloads) {
+        // Salvar localmente (se habilitado no .env)
+        const saved = await saveSubmission("recitativo", item);
+        savedEntries.push(saved);
 
-      if (supabaseUrl && supabaseKey) {
-        const url = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${supabaseTable}`);
-        try {
-          const resSupabase = await fetch(url, {
-            method: "POST",
-            headers: {
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`,
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal"
-            },
-            body: JSON.stringify(payload)
-          });
-          
-          if (!resSupabase.ok) {
-            const errorText = await resSupabase.text();
-            console.error("Erro no Supabase:", errorText);
-            return sendJson(res, 500, { error: "Erro ao salvar no banco de dados Supabase.", details: errorText });
+        // Salvar no Supabase
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const supabaseTable = process.env.SUPABASE_TABLE_RECITATIVOS || "rjm_recitativos";
+
+        if (supabaseUrl && supabaseKey) {
+          const url = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${supabaseTable}`);
+          try {
+            const resSupabase = await fetch(url, {
+              method: "POST",
+              headers: {
+                apikey: supabaseKey,
+                Authorization: `Bearer ${supabaseKey}`,
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+              },
+              body: JSON.stringify(item)
+            });
+            
+            if (!resSupabase.ok) {
+              const errorText = await resSupabase.text();
+              console.error("Erro no Supabase:", errorText);
+              return sendJson(res, 500, { error: "Erro ao salvar no banco de dados Supabase.", details: errorText });
+            }
+          } catch (err) {
+            console.error("Falha ao conectar com Supabase:", err);
+            return sendJson(res, 500, { error: "Falha de conexão com Supabase." });
           }
-        } catch (err) {
-          console.error("Falha ao conectar com Supabase:", err);
-          return sendJson(res, 500, { error: "Falha de conexão com Supabase." });
+        }
+
+        // Encaminhar para Webhook (Google Sheets via Apps Script)
+        const webhookUrl = process.env.WEBHOOK_RECITATIVOS;
+        if (webhookUrl) {
+          try {
+            await fetch(webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                ...item, 
+                spreadsheet_id: process.env.GOOGLE_SHEET_ID_RECITATIVOS,
+                id: saved.id, 
+                created_at: saved.createdAt 
+              })
+            }).catch(() => {});
+          } catch (err) {
+            console.error("Erro no Webhook Recitativos:", err);
+          }
         }
       }
 
-      // Encaminhar para Webhook (Google Sheets via Apps Script)
-      const webhookUrl = process.env.WEBHOOK_RECITATIVOS;
-      if (webhookUrl) {
-        try {
-          await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              ...payload, 
-              spreadsheet_id: process.env.GOOGLE_SHEET_ID_RECITATIVOS,
-              id: saved.id, 
-              created_at: saved.createdAt 
-            })
-          });
-        } catch (err) {
-          console.error("Erro no Webhook Recitativos:", err);
-        }
-      }
-
-      sendJson(res, 201, { message: "Lançamento realizado com sucesso.", id: saved.id });
+      sendJson(res, 201, { 
+        message: payloads.length > 1 ? "Lançamentos realizados com sucesso." : "Lançamento realizado com sucesso.", 
+        ids: savedEntries.map(e => e.id) 
+      });
       return;
     }
 

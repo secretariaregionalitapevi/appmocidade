@@ -50,8 +50,8 @@ body {
 
 
 .card-header .logo {
-  max-width: 180px;
-  margin-bottom: 16px;
+  max-width: 200px;
+  margin-bottom: 20px;
   filter: brightness(0) invert(1);
 }
 
@@ -276,9 +276,9 @@ textarea:focus {
 }
 
 .sac-logo {
-  max-width: 220px; /* Smaller as requested */
+  max-width: 280px; /* Increased for better visibility */
   height: auto;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   filter: brightness(0) invert(1); /* Force white for the lineart logo */
 }
 

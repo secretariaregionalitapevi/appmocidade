@@ -47,6 +47,22 @@ window.checkAuth = async () => {
   return user;
 };
 
+const errorTranslations = {
+  'Invalid login credentials': 'E-mail ou senha incorretos.',
+  'Email not confirmed': 'E-mail não confirmado. Verifique sua caixa de entrada.',
+  'User already registered': 'Este e-mail já está cadastrado.',
+  'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',
+  'Email rate limit exceeded': 'Muitas tentativas. Tente novamente em alguns minutos.',
+  'Signup disabled': 'O cadastro está temporariamente desativado.',
+};
+
+function translateError(msg) {
+  for (const [eng, pt] of Object.entries(errorTranslations)) {
+    if (msg.includes(eng)) return pt;
+  }
+  return msg;
+}
+
 // Lógica para os formulários de login e registro
 document.addEventListener('DOMContentLoaded', async () => {
   const loginForm = document.getElementById('loginForm');
@@ -66,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       
       if (error) {
-        if (feedback) feedback.textContent = 'Erro: ' + error.message;
+        if (feedback) feedback.textContent = 'Erro: ' + translateError(error.message);
       } else {
         window.location.href = '/';
       }
@@ -105,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (authError) {
-        if (feedback) feedback.textContent = 'Erro: ' + authError.message;
+        if (feedback) feedback.textContent = 'Erro: ' + translateError(authError.message);
         return;
       }
 
@@ -130,9 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       Swal.fire({
         title: 'Conta Criada!',
-        text: 'Sua conta foi criada com sucesso. Verifique seu e-mail se necessário ou faça login.',
+        text: 'Sua conta foi criada com sucesso. Faça login para continuar.',
         icon: 'success',
-        confirmButtonColor: '#003049'
+        confirmButtonColor: '#1a4d7c'
       }).then(() => {
         window.location.href = '/login.html';
       });

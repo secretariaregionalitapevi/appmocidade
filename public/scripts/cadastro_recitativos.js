@@ -84,14 +84,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
 
-    // Adicionar listener para cálculo automático
-    const inputs = card.querySelectorAll('.count-input');
+    // Adicionar listener para cálculo automático e UX de limpar o zero
+    const inputs = card.querySelectorAll('.count-input, input[type="number"]:not([readonly])');
     const totalField = card.querySelector(`input[name="total_recitativos_${index}"]`);
     
     inputs.forEach(input => {
+      // Limpar o zero ao focar
+      input.addEventListener('focus', () => {
+        if (input.value === "0") input.value = "";
+      });
+
+      // Voltar para zero se vazio ao desfocar
+      input.addEventListener('blur', () => {
+        if (input.value === "") input.value = "0";
+      });
+
       input.addEventListener('input', () => {
         let sum = 0;
-        inputs.forEach(i => sum += parseInt(i.value || 0));
+        const countInputs = card.querySelectorAll('.count-input');
+        countInputs.forEach(i => sum += parseInt(i.value || 0));
         totalField.value = sum;
       });
     });
@@ -181,23 +192,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
-      // Enviar cada entrada Separadamente ou em Batch
-      // Vou enviar em Batch se o backend suportar, mas o server.js atual espera um por um.
-      // Vou ajustar o server.js para aceitar array ou iterar aqui.
-      for (const entry of entries) {
-        const res = await fetch('/api/recitativos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(entry)
-        });
-        if (!res.ok) throw new Error('Falha no envio de uma das datas');
+      // Enviar todos os lançamentos em um único lote (Batch)
+      const res = await fetch('/api/recitativos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entries)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Falha ao enviar os lançamentos');
       }
 
-      Swal.fire('Sucesso!', 'Lançamento realizado com sucesso.', 'success').then(() => {
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'Lançamento realizado com sucesso.',
+        icon: 'success',
+        timer: 2500,
+        timerProgressBar: true,
+        confirmButtonColor: '#1a4d7c'
+      }).then(() => {
         window.location.href = '/';
       });
     } catch (err) {
-      Swal.fire('Erro', err.message, 'error');
+      Swal.fire({
+        title: 'Erro',
+        text: err.message,
+        icon: 'error',
+        confirmButtonColor: '#1a4d7c'
+      });
     }
   });
 });
