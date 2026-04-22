@@ -656,18 +656,61 @@ async function handleRequest(req, res) {
           const userId = url.searchParams.get("id");
           if (!userId) return sendJson(res, 400, { error: "ID do usuário ausente." });
           
-          const urlProfile = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/rjm_auxiliares?id=eq.${userId}&select=full_name,comum,cidade`);
-          try {
-            const response = await fetch(urlProfile, {
-              headers: {
-                apikey: supabaseKey,
-                Authorization: `Bearer ${supabaseKey}`
+          const tables = [process.env.SUPABASE_TABLE_AUXILIARES, 'rjm_auxiliares', 'profiles'].filter(Boolean);
+          let profile = null;
+          let debugLogs = [];
+
+          for (const table of tables) {
+            try {
+              debugLogs.push(`Buscando na tabela: ${table}`);
+              
+              // 1. Tenta buscar por 'id'
+              const urlId = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${table}?id=eq.${userId}&select=*`);
+              const resId = await fetch(urlId, {
+                headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+              });
+              const dataId = await resId.json();
+              if (dataId && dataId.length > 0) {
+                profile = dataId[0];
+                debugLogs.push(`Encontrado por ID na tabela ${table}`);
+                break;
               }
-            });
-            const data = await response.json();
-            return sendJson(res, 200, data[0] || {});
-          } catch (err) {
-            return sendJson(res, 500, { error: "Erro ao buscar perfil." });
+
+              // 2. Tenta buscar por 'user_id'
+              const urlUserId = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${table}?user_id=eq.${userId}&select=*`);
+              const resUserId = await fetch(urlUserId, {
+                headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+              });
+              const dataUserId = await resUserId.json();
+              if (dataUserId && dataUserId.length > 0) {
+                profile = dataUserId[0];
+                debugLogs.push(`Encontrado por user_id na tabela ${table}`);
+                break;
+              }
+
+              // 3. Tenta buscar por 'email'
+              const userEmail = url.searchParams.get("email");
+              if (userEmail) {
+                const urlEmail = new URL(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/${table}?email=eq.${userEmail}&select=*`);
+                const resEmail = await fetch(urlEmail, {
+                  headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+                });
+                const dataEmail = await resEmail.json();
+                if (dataEmail && dataEmail.length > 0) {
+                  profile = dataEmail[0];
+                  debugLogs.push(`Encontrado por Email na tabela ${table}`);
+                  break;
+                }
+              }
+            } catch (err) {
+              debugLogs.push(`Erro na tabela ${table}: ${err.message}`);
+            }
+          }
+
+          if (profile) {
+            return sendJson(res, 200, profile);
+          } else {
+            return sendJson(res, 200, { _debug: debugLogs });
           }
         }
 

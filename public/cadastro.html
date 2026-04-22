@@ -72,6 +72,15 @@
     window.addEventListener('load', async () => {
       window.currentUser = await window.checkAuth();
       if (window.currentUser) {
+        // Atualizar subtítulo do cabeçalho com a comum se disponível
+        const config = JSON.parse(sessionStorage.getItem('recitativos_config'));
+        if (config && config.comum) {
+          const subtitle = document.getElementById('headerSubtitle');
+          if (subtitle) {
+            subtitle.innerHTML = `Relatório de Recitativos - <strong>${config.comum}</strong>`;
+          }
+        }
+
         // Trigger summary update if the script is already loaded
         if (window.updateSummaryWithName) {
           window.updateSummaryWithName(window.currentUser);
