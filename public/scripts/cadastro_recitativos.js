@@ -59,23 +59,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="grid-counts">
         <div class="form-group">
           <label>Meninas Recitaram</label>
-          <input type="number" name="meninas_${index}" min="0" value="0" required class="count-input">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="meninas_${index}" value="0" required class="count-input numeric-input" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Meninos Recitaram</label>
-          <input type="number" name="meninos_${index}" min="0" value="0" required class="count-input">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="meninos_${index}" value="0" required class="count-input numeric-input" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Moças Recitaram</label>
-          <input type="number" name="mocas_${index}" min="0" value="0" required class="count-input">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="mocas_${index}" value="0" required class="count-input numeric-input" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Moços Recitaram</label>
-          <input type="number" name="mocos_${index}" min="0" value="0" required class="count-input">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="mocos_${index}" value="0" required class="count-input numeric-input" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Total de Comparecimento</label>
-          <input type="number" name="total_comparecimento_${index}" min="0" value="0" required>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" name="total_comparecimento_${index}" value="0" required class="numeric-input" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Total de Recitativos</label>
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Adicionar listener para cálculo automático e UX de limpar o zero
     const countInputs = card.querySelectorAll('.count-input');
     const comparecimentoInput = card.querySelector(`input[name="total_comparecimento_${index}"]`);
-    const allNumberInputsNodeList = card.querySelectorAll('input[type="number"]:not([readonly])');
+    const allNumberInputsNodeList = card.querySelectorAll('.numeric-input');
     
     const totalField = card.querySelector(`input[name="total_recitativos_${index}"]`);
     const totalGeralField = card.querySelector(`input[name="total_geral_${index}"]`);
@@ -140,6 +140,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       justificationCustom.required = isOther;
     });
 
+    const getNumericValue = (input) => {
+      const digits = String(input.value || '').replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : 0;
+    };
+
+    const sanitizeNumericInput = (input) => {
+      const digits = String(input.value || '').replace(/\D/g, '');
+      if (input.value !== digits) input.value = digits;
+      return digits;
+    };
+
     allNumberInputsNodeList.forEach(input => {
       // Limpar o zero ao focar
       input.addEventListener('focus', () => {
@@ -155,13 +166,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       input.addEventListener('input', () => {
+        sanitizeNumericInput(input);
+
         // Calcular Recitativos
         let sumRec = 0;
-        countInputs.forEach(i => sumRec += parseInt(i.value || 0));
+        countInputs.forEach(i => sumRec += getNumericValue(i));
         totalField.value = sumRec;
 
         // Calcular Total Geral
-        const comp = parseInt(comparecimentoInput.value || 0);
+        const comp = getNumericValue(comparecimentoInput);
         totalGeralField.value = sumRec + comp;
       });
     });
@@ -202,6 +215,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const formData = new FormData(form);
     const rawData = Object.fromEntries(formData.entries());
+    const parseCount = (value) => {
+      const digits = String(value || '').replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : 0;
+    };
     
     // Agrupar lançamentos
     const entries = [];
@@ -216,12 +233,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         entries.push({
           data_reuniao: rawData[`date_${i}`],
-          meninas: parseInt(rawData[`meninas_${i}`] || 0),
-          meninos: parseInt(rawData[`meninos_${i}`] || 0),
-          mocas: parseInt(rawData[`mocas_${i}`] || 0),
-          mocos: parseInt(rawData[`mocos_${i}`] || 0),
-          total_recitativos: parseInt(rawData[`total_recitativos_${i}`] || 0),
-          total_comparecimento: parseInt(rawData[`total_comparecimento_${i}`] || 0),
+          meninas: parseCount(rawData[`meninas_${i}`]),
+          meninos: parseCount(rawData[`meninos_${i}`]),
+          mocas: parseCount(rawData[`mocas_${i}`]),
+          mocos: parseCount(rawData[`mocos_${i}`]),
+          total_recitativos: parseCount(rawData[`total_recitativos_${i}`]),
+          total_comparecimento: parseCount(rawData[`total_comparecimento_${i}`]),
           suspenso: isSus ? 'Sim' : 'Não',
           justificativa: just,
           municipio: config.municipio,
@@ -245,12 +262,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       entries.push({
         data_reuniao: selectedDateSelect.value,
-        meninas: parseInt(rawData[`meninas_0`] || 0),
-        meninos: parseInt(rawData[`meninos_0`] || 0),
-        mocas: parseInt(rawData[`mocas_0`] || 0),
-        mocos: parseInt(rawData[`mocos_0`] || 0),
-        total_recitativos: parseInt(rawData[`total_recitativos_0`] || 0),
-        total_comparecimento: parseInt(rawData[`total_comparecimento_0`] || 0),
+        meninas: parseCount(rawData[`meninas_0`]),
+        meninos: parseCount(rawData[`meninos_0`]),
+        mocas: parseCount(rawData[`mocas_0`]),
+        mocos: parseCount(rawData[`mocos_0`]),
+        total_recitativos: parseCount(rawData[`total_recitativos_0`]),
+        total_comparecimento: parseCount(rawData[`total_comparecimento_0`]),
         suspenso: isSus ? 'Sim' : 'Não',
         justificativa: just,
         municipio: config.municipio,
