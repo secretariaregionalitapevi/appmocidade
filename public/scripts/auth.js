@@ -117,7 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           data: {
             full_name: fullName,
             comum: comum,
-            cidade: cidade
+            cidade: cidade,
+            cadastro_origem: 'rjm',
+            cadastro_origem_label: 'RJM'
           }
         }
       });
